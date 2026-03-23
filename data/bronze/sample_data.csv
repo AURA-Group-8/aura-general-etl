@@ -1,0 +1,16 @@
+id,tipo_custo,categoria,descricao,valor,data_pagamento,forma_pagamento,recorrente
+1,Fixo,Aluguel,Aluguel da sala comercial,1500.00,2026-02-01,PIX,Sim
+2,Fixo,Internet,Plano fibra 500mb,120.50,2026-02-03,Cartao,Sim
+3,Fixo,Software,Assinatura sistema antigo,89.90,2026-02-05,Cartao,Sim
+4,Variavel,Produto,Creme hidratante facial,340.75,2026-02-06,PIX,Nao
+5,Variavel,Produto,Toxina botulinica,1200.00,2026-02-08,Transferencia,Nao
+6,Variavel,Descartaveis,Lencol descartavel,95.30,2026-02-09,PIX,Nao
+7,Variavel,Marketing,Impulsionamento Instagram,300.00,2026-02-10,Cartao,Nao
+8,Fixo,Contabilidade,Honorarios contador,450.00,2026-02-12,Transferencia,Sim
+9,Variavel,Manutencao,Manutencao aparelho laser,600.00,2026-02-15,PIX,Nao
+10,Variavel,Produto,Seringa 5ml,  75.00 ,2026-02-18,PIX,Nao
+11,Fixo,Energia,Conta de luz,230.40,2026-02-20,Boleto,Sim
+12,Variavel,Produto,Creme hidratante facial,340.75,2026-02-22,PIX,Nao
+13,Variavel,Produto,Toxina Botulinica,1180.00,2026-02-25,Transferencia,Nao
+14,Variavel,Marketing,Panfl etos impressos,150.00,2026-02-26,PIX,Nao
+15,Fixo,Aluguel,Aluguel da sala comercial,1500.00,2026-02-28,PIX,Sim
