@@ -1,7 +1,14 @@
+import pandas as pd
+import unicodedata
+
+from src.config import schema
 
 def transform_data(df):
     df_normalizado = df.copy()
     normalize_columns(df_normalizado)
+    normalize_data(df_normalizado)
+    fix_data_types(df_normalizado, schema)
+    clean_missing_values(df_normalizado)
     return df_normalizado
 
 def normalize_columns(df):
@@ -27,9 +34,61 @@ def normalize_columns(df):
     return df
 
 def normalize_data(df):
-    """Função para normalizar os dados de um DataFrame"""
+    """Normaliza dados (colunas + conteúdo)"""
+
+    for col in df.select_dtypes(include="object").columns:
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.strip()
+            .replace(["", "nan", "None", "null", "NULL"], pd.NA)
+        )
+
+        # remover acentos
+        df[col] = df[col].apply(
+            lambda x: unicodedata.normalize("NFKD", x)
+            .encode("ascii", "ignore")
+            .decode("utf-8") if pd.notna(x) else x
+        )
+
+    df = df.drop_duplicates()
+
+    return df
 
 
-def fix_data_types(df):
-    """Função para corrigir os tipos de dados de um DataFrame"""
+def fix_data_types(df, schema: dict = None):
+    """Corrige tipos automaticamente ou via schema"""
+
+    for col, dtype in schema.items():
+
+        if col not in df.columns:
+            continue
+
+        if dtype == "int":
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+
+        elif dtype == "float":
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        elif dtype == "datetime":
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+        elif dtype == "string":
+            df[col] = df[col].astype("string")
+
+        elif dtype == "boolean":
+            df[col] = df[col].map(
+                {"true": True, "false": False, "1": True, "0": False}
+            ).astype("boolean")
+
+    return df
+
+
+def clean_missing_values(df):
+    """Tratamento de nulos"""
+
+    df = df.dropna(how="all")
+    df = df.replace(r"^\s*$", pd.NA, regex=True)
+
+    return df
     
