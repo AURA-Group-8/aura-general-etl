@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 def run_pipeline():
     from src.etl.extract import extract_data_from_path
     from src.etl.transform import transform_data
+    from src.etl.load import save_silver_file
 
     root_dir = pathlib.Path(__file__).resolve().parents[2]
     logger.info(f"Root directory: {root_dir}")
@@ -16,3 +17,6 @@ def run_pipeline():
 
     normalized_df = transform_data(df)
     logger.info(f"Normalized data preview:\n{normalized_df.head()}")
+
+    silver_path = f'{root_dir}/data/silver/'
+    save_silver_file(file_path=silver_path, df=normalized_df)
