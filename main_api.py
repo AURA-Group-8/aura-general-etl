@@ -32,4 +32,4 @@ def salvar_custos(file: UploadFile = File(...)):
     return {"message": message}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="HOST_API", port=PORT_API, reload=True)
+    uvicorn.run("main_api:app", host=HOST_API, port=int(PORT_API), reload=True)
