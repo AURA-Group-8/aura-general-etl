@@ -3,7 +3,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-db_config = {
+main_db_config = {
     'host': os.getenv('DB_HOST'),
     'port': os.getenv('DB_PORT'),
     'user': os.getenv('DB_USER'),
@@ -11,17 +11,53 @@ db_config = {
     'database': os.getenv('DB_NAME')
 }
 
+warehouse_db_config = {
+    'host': os.getenv('WAREHOUSE_DB_HOST'),
+    'port': os.getenv('WAREHOUSE_DB_PORT'),
+    'user': os.getenv('WAREHOUSE_DB_USER'),
+    'password': os.getenv('WAREHOUSE_DB_PASSWORD'),
+    'database': os.getenv('WAREHOUSE_DB_NAME')
+}
+
 HOST_API = os.getenv('HOST_API')
 PORT_API = os.getenv('PORT_API')
 
 schema = {
-    "data_compra":"datetime",
+    "data_compra":"datetime64[ns]",
     "fornecedor":"string",
     "nome_material":"string",
     "marca":"string",
-    "data_validade":"datetime",
-    "quantidade_comprada":"int",
+    "data_validade":"datetime64[ns]",
+    "quantidade_comprada":"Int64",
     "unidade_medida":"string",
     "valor_total":"float",
     "observacoes":"string",
 }
+
+schema_config = {
+    "unique": [
+        "data_compra",
+        "fornecedor",
+        "nome_material",
+        "marca"
+    ],
+
+    "not_null": [
+        "data_compra",
+        "fornecedor",
+        "nome_material",
+        "quantidade_comprada",
+        "valor_total"
+    ],
+
+    "primary_keys": [
+        "data_compra",
+        "fornecedor",
+        "nome_material"
+    ],
+
+    "types": schema
+}
+
+BRONZE_PATH = os.getenv('BRONZE_PATH')
+SILVER_PATH = os.getenv('SILVER_PATH')

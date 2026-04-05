@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  warehouse:
+    image: mysql:8.0
+    container_name: aura_warehouse
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: warehouse_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - warehouse_data:/var/lib/mysql
+
+volumes:
+  warehouse_data:
