@@ -1,9 +1,7 @@
 import pandas as pd
 import unicodedata
 
-from src.config import schema
-
-def transform_data(df):
+def transform_data(df, schema):
     df_normalizado = df.copy()
     normalize_columns(df_normalizado)
     fix_data_types(df_normalizado, schema)
