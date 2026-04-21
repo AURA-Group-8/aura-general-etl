@@ -16,6 +16,13 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Python: ETL",
+            "type": "python",
+            "request": "launch",
+            "module": "src.etl.extract",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
