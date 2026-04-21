@@ -61,3 +61,32 @@ schema_config = {
 
 BRONZE_PATH = os.getenv('BRONZE_PATH')
 SILVER_PATH = os.getenv('SILVER_PATH')
+
+main_db_schema = {
+    "schedule_id": "Int64",
+    "user_id": "Int64",
+    "username": "string",
+    "role_id": "Int64",
+    "job_id": "Int64",
+    "name": "string",
+    "description": "string",
+    "start_datetime": "datetime64[ns]",
+    "end_datetime": "datetime64[ns]",
+    "status": "string",
+    "canceled": "boolean",
+    "days_of_week": "string",
+    "work_start": "timedelta64[ns]",
+    "work_end": "timedelta64[ns]",
+    "break_start": "timedelta64[ns]",
+    "break_end": "timedelta64[ns]",
+    "current_price": "float",
+    "total_price": "float",
+    "duracao": "timedelta64[ns]"
+}
+
+main_db_schema_config = {
+    "unique": [],
+    "not_null": [],
+    "primary_keys": [],
+    "types": schema
+}

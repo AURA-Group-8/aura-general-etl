@@ -158,8 +158,18 @@ def verify_data_types(df, expected_schema):
             
 def fix_null_values_mysql(df):
     """Função para converter valores nulos em None, para compatibilidade com MySQL"""
+    import numpy as np
+    df = df.replace({np.nan: None})
+
+    df = df.where(pd.notnull(df), None)
 
     for col in df.select_dtypes(include=['datetime64[ns]']).columns:
         df[col] = df[col].apply(lambda x: x.to_pydatetime() if pd.notna(x) else None)
+    
+    for col in df.select_dtypes(include=['timedelta64[ns]']).columns:
+        df[col] = df[col].apply(
+            lambda x: str(x).split(" ")[-1] if x is not None else None
+        )
+
         
     return df

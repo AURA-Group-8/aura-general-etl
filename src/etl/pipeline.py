@@ -1,8 +1,8 @@
-from src.databases import create_execution_log_table, insert_execution_log, get_last_execution_time, create_costs_table, clean_execution_log, bulk_upsert_warehouse_db
+from src.databases import create_execution_log_table, insert_execution_log, get_last_execution_time, create_costs_table, clean_execution_log, bulk_upsert_warehouse_db, read_from_main_db, create_dados_aplicacao_table, overwrite_warehouse_db
 from .extract import extract_files_from_upload_date
 from .transform import transform_data, union_dataframes, verify_data_quality, fix_null_values_mysql
 from .load import save_silver_file
-from src.config import schema, schema_config
+from src.config import schema, schema_config, main_db_schema, main_db_schema_config
 
 import pandas as pd
 
@@ -51,69 +51,50 @@ def custos_pipeline():
 
 def dados_aplicacao_pipeline():
     logger.info("Running application data pipeline")
-    # 1. Controle de execução (igual ao pipeline de custos)
-    # Aqui a ideia é garantir que a gente só processe dados novos
-    # - Limpa logs antigos desse pipeline (usar só pra debug)
-    # - Cria a tabela de log se não existir
-    # - Busca a última vez que esse pipeline rodou filtrando por nome (ex: "dados_aplicacao_pipeline")
-    # - Registra que estamos rodando agora
-    # Isso tudo serve pra usar a data da última execução como filtro na extração
-    # Obs: se não existir execução anterior, considerar pegar tudo (last_execution_time = None)
+    clean_execution_log("dados_aplicacao_pipeline")
+    create_execution_log_table() 
+    last_execution_time = get_last_execution_time("dados_aplicacao_pipeline") 
+    insert_execution_log("dados_aplicacao_pipeline") 
+    query = """
+        select 
+            schedule.id as schedule_id,
+            users.id as user_id,
+            users.username,
+            users.role_id,
+            job.id as job_id,
+            job.name,
+            job.description,
+            schedule.start_datetime,
+            schedule.end_datetime,
+            schedule.status,
+            schedule.canceled,
+            schedule_setting.days_of_week,
+            schedule_setting.work_Start,
+            schedule_setting.work_End,
+            schedule_setting.break_Start,
+            schedule_setting.break_End,
+            js.current_price,
+            schedule.total_price,
+            (schedule.end_datetime - schedule.start_datetime) AS duracao
+        from job_schedule js 
+        right join job 
+            on job.id = js.job_id
+        right join schedule 
+            on schedule.id = js.schedule_id
+        right join users
+            on users.id = schedule.users_id
+        cross join schedule_setting
+    """
+    df = read_from_main_db(query)
+    df = pd.DataFrame(df, columns=main_db_schema.keys())
+    df = transform_data(df, main_db_schema)
+    df = verify_data_quality(df, main_db_schema_config)
+    save_silver_file(df=df, table="dados_aplicacao")
+    create_dados_aplicacao_table()
 
-    # 2. Extração dos dados do banco (principal diferença desse pipeline)
-    # Em vez de ler arquivos CSV, aqui você vai:
-    # - Conectar no banco do backend usando SQLAlchemy (usar engine do database.py)
-    # - Fazer SELECT nas tabelas necessárias com os campos definidos na documentação
-    # - Preferir fazer JOIN direto no SQL (mais performático que juntar depois no pandas)
-    # - Filtrar os dados usando a última data de execução (ex: updated_at > last_execution_time)
-    # - Converter o resultado em DataFrame do pandas
-    # - Retornar uma lista de DataFrames (mesmo que seja só um)
+    df = fix_null_values_mysql(df)
+    df['loaddate'] = pd.Timestamp.now()
 
-    # 3. Definição de schema
-    # Antes de transformar, você precisa definir o schema no config:
-    # - Nome das colunas (já no padrão final esperado)
-    # - Tipo de cada coluna
-    # - Quais são obrigatórias (not_null)
-    # - Quais são chaves primárias (primary_keys)
-    # Isso vai ser usado nas funções de transformação e validação
-
-    # 4. Transformação dos dados
-    # Para cada DataFrame extraído:
-    # - Aplicar a função transform_data passando o schema da tabela correspondente
-
-    # 5. Unificação dos dados (wide table)
-    # Se você tiver dados de mais de uma tabela:
-    # - Juntar tudo em um único DataFrame usando union_dataframes
-    # - Manter só as colunas definidas no schema (filter_columns)
-    # Se for só uma tabela, pode pular essa etapa
-
-    # 6. Validação de qualidade
-    # Rodar verify_data_quality:
-    # - Garante que colunas obrigatórias estão preenchidas
-    # - Valida unicidade com base nas chaves
-    # - Garante que os tipos estão corretos
-    # Se falhar, o pipeline deve parar (evita subir dado quebrado)
-
-    # 7. Salvar camada silver
-    # Salvar o DataFrame tratado como arquivo (parquet/csv)
-    # Usar save_silver_file(df, "dados_aplicacao")
-    # Isso serve como uma camada intermediária já limpa e organizada (facilita debug e reprocessamento)
-
-    # 8. Criar tabela no banco analítico
-    # Criar a tabela de destino no warehouse (caso não exista)
-    # Estrutura deve seguir o schema definido (mesmos nomes e tipos principais)
-    # Criar função similar a create_costs_table()
-
-    # 9. Ajustes finais antes de subir
-    # - Tratar valores nulos (com a função fix_null_values_mysql)
-    # - Converter tipos de data se necessário (MySQL não entende datetime do pandas)
-    # - Adicionar coluna 'loaddate' com a data atual (pd.Timestamp.now())
-
-    # 10. Upsert no banco analítico
-    # Inserir os dados na tabela final:
-    # - Se já existir (mesma primary key), faz UPDATE
-    # - Se não existir, faz INSERT
-    # - Usar bulk_upsert_warehouse_db(df, table_name, primary_keys)
-    # Isso evita duplicação e mantém os dados atualizados
+    overwrite_warehouse_db(df, table_name="dados_aplicacao")
 
     logger.info("Application data pipeline completed")

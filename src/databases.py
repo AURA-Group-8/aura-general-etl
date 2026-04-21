@@ -16,13 +16,15 @@ def create_warehouse_db_engine():
     return create_engine(warehouse_url)
 
 def read_from_main_db(query):
+    sql = text(query)
     with create_main_db_engine().connect() as connection:
-        result = connection.execute(text(query))
+        result = connection.execute(sql)
         return result.fetchall()
 
 def read_from_warehouse_db(query):
+    sql = text(query)
     with create_warehouse_db_engine().connect() as connection:
-        result = connection.execute(text(query))
+        result = connection.execute(sql)
         return result.fetchall()
 
 def bulk_upsert_warehouse_db(df, table_name, primary_keys):
@@ -40,6 +42,21 @@ def bulk_upsert_warehouse_db(df, table_name, primary_keys):
 
     with create_warehouse_db_engine().begin() as connection:
         connection.execute(upsert_stmt)
+
+def overwrite_warehouse_db(df, table_name):
+    from sqlalchemy import MetaData, Table
+
+    with create_warehouse_db_engine().begin() as connection:
+        logger.info(f"Overwriting table {table_name} in warehouse database")
+        # 1. Deletar registros existentes (opcional, dependendo do comportamento desejado)
+        delete_sql = text(f"DELETE FROM {table_name}")
+        connection.execute(delete_sql)
+
+        # 2. Inserir novos registros
+        records = df.to_dict("records")
+        if records: 
+            insert_stmt = mysql_insert(Table(table_name, MetaData(), autoload_with=create_warehouse_db_engine())).values(records)
+            connection.execute(insert_stmt)
 
 def create_execution_log_table():
     with create_warehouse_db_engine().begin() as connection:
@@ -68,6 +85,35 @@ def create_costs_table():
             observacoes TEXT,
             loaddate DATETIME,
             PRIMARY KEY (data_compra, fornecedor, nome_material)
+        )"""
+
+        connection.execute(text(sql))
+        connection.commit()
+
+def create_dados_aplicacao_table():
+    with create_warehouse_db_engine().begin() as connection:
+        logger.info("Creating dados_aplicacao table if it does not exist")
+        sql = """CREATE TABLE IF NOT EXISTS warehouse_db.dados_aplicacao (
+            schedule_id INT,
+            user_id INT,
+            username VARCHAR(255),
+            role_id INT,
+            job_id INT,
+            name VARCHAR(255),
+            description TEXT,
+            start_datetime DATETIME,
+            end_datetime DATETIME,
+            status VARCHAR(50),
+            canceled BOOLEAN,
+            days_of_week VARCHAR(50),
+            work_start TIME,
+            work_end TIME,
+            break_start TIME,
+            break_end TIME,
+            current_price FLOAT,
+            total_price FLOAT,
+            duracao TIME,
+            loaddate DATETIME
         )"""
 
         connection.execute(text(sql))

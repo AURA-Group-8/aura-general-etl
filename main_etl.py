@@ -11,4 +11,6 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     from src.etl.pipeline import custos_pipeline
+    from src.etl.pipeline import dados_aplicacao_pipeline
     custos_pipeline()
+    dados_aplicacao_pipeline()
