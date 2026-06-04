@@ -1,13 +1,15 @@
 import uvicorn
 
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException, status
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.service import (
+from src.api.service_template import (
     get_latest_template_file_path_service,
     save_bronze_file_service
 )
+import src.api.service_dashboard as dashboard_service
+
 from src.config import HOST_API, PORT_API
 
 app = FastAPI()
@@ -52,9 +54,47 @@ def salvar_custos(file: UploadFile = File(...)):
     message = save_bronze_file_service(file=file)
     return {"message": message}
 
+@app.get("/api/v1/agendamentos_semanais")
+def agendamentos_semanais():
+    data = dashboard_service.get_agendamentos_semanais()
+    if not data:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content=data)
+
+@app.get("/api/v1/resumo")
+def resumo():
+    data = dashboard_service.get_resumo()
+    if not data:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content=data)
+
+
+@app.get("/api/v1/faturamento")
+def faturamento(periodo_meses: int = None):
+    data = dashboard_service.get_faturamento(periodo_meses=periodo_meses)
+    if not data:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content=data)
+
+
+@app.get("/api/v1/top_servicos")
+def top_servicos(periodo_meses: int = None):
+    data = dashboard_service.get_top_servicos(periodo_meses=periodo_meses)
+    if not data:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content=data)
+
+
+@app.get("/api/v1/clientes_inativos")
+def clientes_inativos():
+    data = dashboard_service.get_clientes_inativos()
+    if not data:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(content=data)
+
 if __name__ == "__main__":
     uvicorn.run(
         "main_api:app",
-        host=HOST_API,   # ex: "0.0.0.0" se quiser acessar de outro dispositivo
+        host=HOST_API,
         port=int(PORT_API)
     )
