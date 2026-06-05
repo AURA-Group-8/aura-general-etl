@@ -1,6 +1,6 @@
 from src.infraestructure.databases import execute_warehouse_sql
 import pandas as pd
-
+from datetime import timedelta
 
 def get_agendamentos_semanais():
     # Conta agendamentos por dia da semana no último mês (mês completo anterior)
@@ -38,7 +38,7 @@ def get_agendamentos_semanais():
 
 def get_resumo():
     hoje = pd.Timestamp.today()
-    mes_passado = hoje - pd.DateOffset(months=1)
+    mes_passado = hoje - timedelta(days=30)
 
     tkm_e_faturamento_por_mes = get_tkm_e_faturamento_por_mes(hoje)
     custos_por_mes = get_custos_por_mes(hoje)
