@@ -28,5 +28,5 @@ start-main-db:
 stop-main-db:
 	docker stop mysql-container
 
-exec-main-db:
+enter-main-db:
 	docker exec -it mysql-container mysql -u admin -p
