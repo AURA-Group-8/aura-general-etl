@@ -5,6 +5,7 @@ from src.infraestructure.databases import (
 from src.infraestructure.execution_registry import (
     insert_execution_log,
     get_last_execution_time,
+    clean_execution_log
 )
 from src.infraestructure.datalake import save_file_from_df
 from .transform import (
@@ -67,9 +68,9 @@ def dados_aplicacao_pipeline():
         cross join schedule_setting
         where 1=1
             and (
-                job.modified_at > '{last_execution_time_str}'
-                or schedule.modified_at > '{last_execution_time_str}'
-                or users.modified_at > '{last_execution_time_str}'
+                job.modified_at >= '{last_execution_time_str}'
+                or schedule.modified_at >= '{last_execution_time_str}'
+                or users.modified_at >= '{last_execution_time_str}'
             )
     """
     logger.info("Extracting data from application database")
