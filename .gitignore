@@ -210,3 +210,7 @@ __marimo__/
 /notebooks
 **.xlsx#
 estrutura.sql
+
+/data/bronze/*
+/data/silver/*
+/data/temp/*
